@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Kerja Bidang Ekonomi Kreatif HIMATEKBIS 2026</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ocean: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            500: '#14b8a6', // Teal cerah segar
+                            600: '#0d9488',
+                            800: '#115e59',
+                            900: '#134e4a',
+                            950: '#042f2e',
+                        },
+                        marine: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9', // Sky Blue cerah
+                            900: '#0c4a6e', // Deep Marine
+                        },
+                        luxuryGold: {
+                            100: '#fef3c7',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f4fcfc 0%, #edf9fb 40%, #fdfcf7 100%);
+            color: #0c4a6e;
+            overflow-x: hidden;
+        }
+
+        /* Ambient card dengan efek glassmorphism tipis, tanpa border kaku */
+        .ambient-card {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ambient-card:hover {
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateY(-2px);
+            box-shadow: 0 30px 60px -15px rgba(20, 184, 166, 0.1), 
+                        0 0 40px 10px rgba(255, 255, 255, 0.7) inset;
+        }
+
+        /* Animasi gelembung air pelan di latar belakang */
+        @keyframes gentleFloat {
+            0% { transform: translateY(110vh) translateX(0) scale(1); opacity: 0; }
+            20% { opacity: 0.35; }
+            80% { opacity: 0.35; }
+            100% { transform: translateY(-10vh) translateX(50px) scale(1.4); opacity: 0; }
+        }
+
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle, rgba(204,251,241,0.7) 0%, rgba(14,165,233,0.08) 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Garis progres dinamis yang bersinar lembut */
+        .timeline-track-glow {
+            background: linear-gradient(to bottom, #14b8a6, #0ea5e9, #f59e0b);
+            filter: drop-shadow(0 2px 8px rgba(20, 184, 166, 0.4));
+        }
+
+        /* CSS khusus untuk area hover upload logo */
+        .logo-upload-container:hover .logo-overlay {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="selection:bg-ocean-500 selection:text-white min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+
+    <!-- Wadah Efek Air Alami di Background -->
+    <div id="bubbles-container" class="absolute inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <!-- Custom Toast Notification untuk Error Berkas -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-500 pointer-events-none">
+        <div class="bg-red-500 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center space-x-3 max-w-sm">
+            <i class="fa-solid fa-circle-exclamation text-lg"></i>
+            <span id="toast-message" class="text-xs font-semibold">Mohon pilih berkas gambar saja.</span>
+        </div>
+    </div>
+
+    <!-- Header Bersih & Formal -->
+    <header class="w-full relative z-10 bg-white/30 backdrop-blur-md border-b border-white/40 py-5">
+        <div class="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+            
+            <!-- Logo & Identitas Jurusan -->
+            <div class="flex items-center space-x-4">
+                <!-- Fitur Upload Logo Interaktif dengan dukungan Drag and Drop -->
+                <div class="relative group cursor-pointer logo-upload-container" 
+                     id="logo-drop-zone"
+                     onclick="triggerLogoUpload()" 
+                     title="Klik atau seret gambar ke sini untuk mengganti logo">
+                    
+                    <div id="logo-preview-container" class="relative w-16 h-16 bg-gradient-to-tr from-ocean-500 via-marine-500 to-luxuryGold-400 rounded-2xl flex items-center justify-center shadow-md overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg">
+                        <!-- Default Icon/Logo -->
+                        <i id="default-logo-icon" class="fa-solid fa-water text-white text-2xl animate-pulse"></i>
+                        <img id="custom-logo-img" class="hidden w-full h-full object-cover" alt="Logo Himpunan">
+                        
+                        <!-- Overlay Saat Kursor Diarahkan (Hover) -->
+                        <div class="logo-overlay absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 transition-opacity duration-300">
+                            <i class="fa-solid fa-cloud-arrow-up text-white text-sm mb-1 animate-bounce"></i>
+                            <span class="text-[8px] text-white uppercase font-bold tracking-widest text-center px-1">Ganti Logo</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Badge Kamera Kecil sebagai petunjuk visual visual upload -->
+                    <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow border border-gray-100 text-ocean-600 text-[10px] group-hover:bg-ocean-500 group-hover:text-white transition-colors duration-300">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+
+                    <!-- Input File Tersembunyi -->
+                    <input type="file" id="logo-file-input" class="hidden" accept="image/*" onchange="handleLogoChange(event)">
+                </div>
+
+                <div>
+                    <h1 class="font-serif text-2xl font-bold tracking-wide text-marine-900 leading-tight">
+                        EKOTIF <span class="text-ocean-600 font-sans font-bold text-sm tracking-widest block uppercase">HIMATEKBIS 2026</span>
+                    </h1>
+                    <p class="text-[11px] text-marine-900/60 uppercase tracking-widest font-bold">Teknologi & Bisnis Perikanan dan Kelautan Jepara</p>
+                </div>
+            </div>
+            
+            <!-- Status Lencana Aktif -->
+            <div class="flex items-center space-x-3 bg-white/70 backdrop-blur-md px-5 py-2.5 rounded-full shadow-sm border border-white/50">
+                <span class="flex h-2.5 w-2.5 rounded-full bg-ocean-500 animate-pulse"></span>
+                <span class="text-xs font-bold tracking-wider text-marine-900 uppercase">EKOTIF HIMATEKBIS 2026</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Area Utama: Judul Besar & Pengantar Alami -->
+    <main class="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 py-16 flex-1 w-full">
+        
+        <div class="max-w-3xl mb-20 space-y-4">
+            <span class="text-xs font-bold tracking-widest text-ocean-700 bg-ocean-100/70 px-4 py-1.5 rounded-full uppercase inline-block">
+                Rencana Kegiatan Kami
+            </span>
+            <h2 class="font-serif text-3xl sm:text-5xl font-medium text-marine-900 leading-tight">
+                Program Kerja Bidang <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-ocean-600 via-marine-500 to-luxuryGold-500">Ekonomi Kreatif HIMATEKBIS 2026</span>
+            </h2>
+            <p class="text-marine-900/80 text-sm sm:text-base font-normal leading-relaxed max-w-2xl">
+                Ini adalah rencana kegiatan nyata kami di Bidang Ekonomi Kreatif (EKOTIF) untuk membantu teman-teman mahasiswa TBPK Jepara merintis usaha, mengelola koperasi bersama, dan menyiapkan perlengkapan kuliah dengan lebih mudah dan terarah.
+            </p>
+        </div>
+
+        <div class="relative">
+            <!-- Garis Alur di Sebelah Kiri -->
+            <div class="absolute left-4 sm:left-8 top-2 bottom-2 w-0.5 bg-gradient-to-b from-ocean-100 via-marine-100 to-luxuryGold-100 rounded-full">
+                <!-- Bar Pengisian Berdasarkan Gerakan Scroll -->
+                <div id="timeline-progress" class="w-full rounded-full timeline-track-glow transition-all duration-300" style="height: 0%;"></div>
+            </div>
+
+            <!-- Daftar Program Kerja Yang Melebar & Bebas dari Kotak Kaku -->
+            <div class="space-y-16 pl-12 sm:pl-20">
+                
+                <!-- PROGRAM 1: Launching Pendataan Usaha -->
+                <div class="roadmap-section relative group">
+                    <!-- Titik Penunjuk Garis Waktu di Kiri -->
+                    <div class="absolute -left-12 sm:-left-20 top-2 transform translate-x-[-7px] sm:translate-x-[-3px] flex items-center justify-center z-10">
+                        <div class="w-4 h-4 rounded-full bg-white ring-4 ring-ocean-100 group-hover:ring-ocean-300 group-hover:scale-125 transition-all duration-500 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-ocean-500 group-hover:bg-ocean-600"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Konten Yang Luas & Memudar Lembut -->
+                    <div class="ambient-card p-6 sm:p-10 rounded-[2.5rem] relative overflow-hidden">
+                        <!-- Pantulan Cahaya Lembut di Latar Belakang -->
+                        <div class="absolute -top-12 -right-12 w-64 h-64 bg-ocean-100/30 rounded-full blur-3xl pointer-events-none group-hover:bg-ocean-200/30 transition-colors duration-700"></div>
+                        
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-semibold tracking-wider text-ocean-800 bg-ocean-100/70 px-4 py-1.5 rounded-full">
+                                    <i class="fa-regular fa-calendar-days mr-1.5 text-ocean-600"></i> 10 Mei 2026
+                                </span>
+                                <span class="text-[10px] tracking-widest text-marine-900/40 font-bold uppercase">Tahap 01</span>
+                            </div>
+                            <!-- Penanda Status Selesai -->
+                            <div class="flex items-center space-x-2 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Sudah Terlaksana</span>
+                            </div>
+                        </div>
+
+                        <!-- Judul Kegiatan -->
+                        <h3 class="font-serif text-xl sm:text-2xl font-bold text-marine-900 mb-4 group-hover:text-ocean-600 transition-colors duration-300">
+                            Launching Pendataan Usaha Mahasiswa TBPK Jepara
+                        </h3>
+
+                        <!-- Deskripsi Bahasa Manusia -->
+                        <p class="text-marine-900/80 text-sm sm:text-base leading-relaxed font-normal mb-8 max-w-4xl">
+                            Kami ingin mendata dan mengumpulkan daftar usaha yang dimiliki oleh teman-teman mahasiswa aktif TBPK Jepara. Tujuannya sederhana: agar kita punya basis data usaha yang rapi di lingkungan himpunan. Dengan data ini, kami bisa lebih mudah mengajak kalian berkolaborasi saat ada acara pameran, bazar, festival, atau seminar kampus. Selain itu, program ini juga menjadi langkah awal kami untuk bantu mempromosikan produk maupun jasa teman-teman secara luas lewat kanal resmi himpunan.
+                        </p>
+
+                        <!-- Poin Rencana Nyata -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-marine-900/5">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-ocean-100/40 flex items-center justify-center text-ocean-600 flex-shrink-0">
+                                    <i class="fa-solid fa-address-book text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Pendataan Rapi</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Mengumpulkan data jenis usaha, pemilik, dan kontak jualan mahasiswa.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-ocean-100/40 flex items-center justify-center text-ocean-600 flex-shrink-0">
+                                    <i class="fa-solid fa-share-nodes text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Saling Support</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Memudahkan teman-teman terlibat langsung di setiap event/bazar kampus.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-ocean-100/40 flex items-center justify-center text-ocean-600 flex-shrink-0">
+                                    <i class="fa-solid fa-store text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Promosi Gratis</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Membantu publikasi dan mengenalkan produk buatan mahasiswa ke luar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROGRAM 2: Persiapan Ruangan Koperasi -->
+                <div class="roadmap-section relative group">
+                    <!-- Titik Penunjuk Garis Waktu di Kiri -->
+                    <div class="absolute -left-12 sm:-left-20 top-2 transform translate-x-[-7px] sm:translate-x-[-3px] flex items-center justify-center z-10">
+                        <div class="w-4 h-4 rounded-full bg-white ring-4 ring-marine-100 group-hover:ring-marine-300 group-hover:scale-125 transition-all duration-500 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-marine-500 group-hover:bg-marine-600"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Konten Yang Luas & Memudar Lembut -->
+                    <div class="ambient-card p-6 sm:p-10 rounded-[2.5rem] relative overflow-hidden">
+                        <!-- Pantulan Cahaya Lembut di Latar Belakang -->
+                        <div class="absolute -top-12 -right-12 w-64 h-64 bg-marine-100/30 rounded-full blur-3xl pointer-events-none group-hover:bg-marine-200/30 transition-colors duration-700"></div>
+                        
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-semibold tracking-wider text-marine-800 bg-marine-100/70 px-4 py-1.5 rounded-full">
+                                    <i class="fa-regular fa-calendar-days mr-1.5 text-marine-500"></i> 25 Mei 2026
+                                </span>
+                                <span class="text-[10px] tracking-widest text-marine-900/40 font-bold uppercase">Tahap 02</span>
+                            </div>
+                            <!-- Penanda Status Selesai -->
+                            <div class="flex items-center space-x-2 bg-emerald-50 px-3.5 py-1.5 rounded-full border border-emerald-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Sudah Terlaksana</span>
+                            </div>
+                        </div>
+
+                        <!-- Judul Kegiatan -->
+                        <h3 class="font-serif text-xl sm:text-2xl font-bold text-marine-900 mb-4 group-hover:text-marine-600 transition-colors duration-300">
+                            Persiapan Ruangan Koperasi & Perlengkapan Atribut Mahasiswa
+                        </h3>
+
+                        <!-- Deskripsi Bahasa Manusia -->
+                        <p class="text-marine-900/80 text-sm sm:text-base leading-relaxed font-normal mb-8 max-w-4xl">
+                            Ini adalah langkah nyata kami untuk menghidupkan kembali fungsi koperasi mahasiswa sebagai tempat utama pemenuhan kebutuhan harian kita di kampus. Kami fokus merapikan ruangan fisik koperasi agar lebih nyaman dikunjungi, menata urusan administrasi internal biar makin tertib, serta menyediakan kelengkapan atribut resmi mahasiswa (seperti jaket, kaos angkatan, totebag, ID card, dan kebutuhan kuliah lainnya) secara terpusat dengan kualitas yang baik dan harga bersahabat.
+                        </p>
+
+                        <!-- Poin Rencana Nyata -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-marine-900/5">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-marine-100/40 flex items-center justify-center text-marine-600 flex-shrink-0">
+                                    <i class="fa-solid fa-compass-drafting text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Penataan Ruang</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Merapikan tata letak barang dan kebersihan fisik koperasi mahasiswa.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-marine-100/40 flex items-center justify-center text-marine-600 flex-shrink-0">
+                                    <i class="fa-solid fa-tags text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Atribut Kampus</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Penyediaan jas lab, jaket, kaos angkatan, dan kartu identitas maba.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-marine-100/40 flex items-center justify-center text-marine-600 flex-shrink-0">
+                                    <i class="fa-solid fa-clipboard-list text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Manajemen Rapi</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Mengatur sistem pencatatan stok barang agar pelayanan lebih cepat.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROGRAM 3: Kontribusi pada PKKMB 2026 -->
+                <div class="roadmap-section relative group">
+                    <!-- Titik Penunjuk Garis Waktu di Kiri -->
+                    <div class="absolute -left-12 sm:-left-20 top-2 transform translate-x-[-7px] sm:translate-x-[-3px] flex items-center justify-center z-10">
+                        <div class="w-4 h-4 rounded-full bg-white ring-4 ring-luxuryGold-100 group-hover:ring-luxuryGold-300 group-hover:scale-125 transition-all duration-500 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-luxuryGold-500 group-hover:bg-luxuryGold-600"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Konten Yang Luas & Memudar Lembut -->
+                    <div class="ambient-card p-6 sm:p-10 rounded-[2.5rem] relative overflow-hidden">
+                        <!-- Pantulan Cahaya Lembut di Latar Belakang -->
+                        <div class="absolute -top-12 -right-12 w-64 h-64 bg-luxuryGold-100/20 rounded-full blur-3xl pointer-events-none group-hover:bg-luxuryGold-200/20 transition-colors duration-700"></div>
+                        
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-semibold tracking-wider text-luxuryGold-800 bg-luxuryGold-100/50 px-4 py-1.5 rounded-full">
+                                    <i class="fa-regular fa-calendar-days mr-1.5 text-luxuryGold-500"></i> 22 Juli 2026
+                                </span>
+                                <span class="text-[10px] tracking-widest text-marine-900/40 font-bold uppercase">Tahap 03</span>
+                            </div>
+                            <!-- Penanda Status Persiapan -->
+                            <div class="flex items-center space-x-2 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Tahap Persiapan</span>
+                            </div>
+                        </div>
+
+                        <!-- Judul Kegiatan -->
+                        <h3 class="font-serif text-xl sm:text-2xl font-bold text-marine-900 mb-4 group-hover:text-luxuryGold-600 transition-colors duration-300">
+                            Kontribusi EKOTIF pada PKKMB 2026
+                        </h3>
+
+                        <!-- Deskripsi Bahasa Manusia -->
+                        <p class="text-marine-900/80 text-sm sm:text-base leading-relaxed font-normal mb-8 max-w-4xl">
+                            Kami di divisi EKOTIF ikut ambil bagian langsung untuk menyambut kedatangan teman-teman mahasiswa baru angkatan 2026 dalam kegiatan PKKMB. Kami bekerja sama langsung dengan pihak BEM UNDIP untuk mengelola dan mendistribusikan kebutuhan atribut resmi mahasiswa baru agar prosesnya tertib dan lancar. Di momen ini, kami juga akan membuka stand khusus kewirausahaan untuk memperkenalkan asyiknya berbisnis sejak dini di lingkungan perkuliahan.
+                        </p>
+
+                        <!-- Poin Rencana Nyata -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-marine-900/5">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-luxuryGold-100/40 flex items-center justify-center text-luxuryGold-600 flex-shrink-0">
+                                    <i class="fa-solid fa-users-viewfinder text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Sinergi BEM</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Kolaborasi penyaluran atribut maba secara tertata dan jelas.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-luxuryGold-100/40 flex items-center justify-center text-luxuryGold-600 flex-shrink-0">
+                                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Sapa Mahasiswa Baru</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Membantu maba mendapatkan perlengkapan kuliah tanpa ribet.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-luxuryGold-100/40 flex items-center justify-center text-luxuryGold-600 flex-shrink-0">
+                                    <i class="fa-solid fa-umbrella-beach text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Pengenalan Karya</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Mengenalkan bidang bisnis kreatif maritim lewat stand pameran.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PROGRAM 4: Pencerdasan Mata Kuliah Bisnis & Lab Pengolahan -->
+                <div class="roadmap-section relative group">
+                    <!-- Titik Penunjuk Garis Waktu di Kiri -->
+                    <div class="absolute -left-12 sm:-left-20 top-2 transform translate-x-[-7px] sm:translate-x-[-3px] flex items-center justify-center z-10">
+                        <div class="w-4 h-4 rounded-full bg-white ring-4 ring-ocean-100 group-hover:ring-ocean-300 group-hover:scale-125 transition-all duration-500 flex items-center justify-center">
+                            <div class="w-2 h-2 rounded-full bg-ocean-500 group-hover:bg-ocean-600"></div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Konten Yang Luas & Memudar Lembut -->
+                    <div class="ambient-card p-6 sm:p-10 rounded-[2.5rem] relative overflow-hidden">
+                        <!-- Pantulan Cahaya Lembut di Latar Belakang -->
+                        <div class="absolute -top-12 -right-12 w-64 h-64 bg-ocean-100/30 rounded-full blur-3xl pointer-events-none group-hover:bg-ocean-200/30 transition-colors duration-700"></div>
+                        
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-xs font-semibold tracking-wider text-ocean-800 bg-ocean-100/70 px-4 py-1.5 rounded-full">
+                                    <i class="fa-regular fa-calendar-days mr-1.5 text-ocean-600"></i> 15 Agustus 2026
+                                </span>
+                                <span class="text-[10px] tracking-widest text-marine-900/40 font-bold uppercase">Tahap 04</span>
+                            </div>
+                            <!-- Penanda Status Persiapan -->
+                            <div class="flex items-center space-x-2 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-100">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Tahap Persiapan</span>
+                            </div>
+                        </div>
+
+                        <!-- Judul Kegiatan -->
+                        <h3 class="font-serif text-xl sm:text-2xl font-bold text-marine-900 mb-4 group-hover:text-ocean-600 transition-colors duration-300">
+                            Pencerdasan Kuliah Bisnis & Pengenalan Fasilitas Lab Pengolahan TBPK
+                        </h3>
+
+                        <!-- Deskripsi Bahasa Manusia -->
+                        <p class="text-marine-900/80 text-sm sm:text-base leading-relaxed font-normal mb-8 max-w-4xl">
+                            Kami ingin mengajak teman-teman mahasiswa untuk melihat langsung bagaimana teori bisnis di perkuliahan TBPK bisa diwujudkan menjadi ide usaha nyata. Lewat kegiatan pencerdasan ini, kita akan kumpul bareng untuk membedah peluang bisnis kreatif, sekaligus keliling mengenal fasilitas dan peralatan modern yang ada di Laboratorium Pengolahan Hasil Perikanan kita. Sesi ini fokus untuk membuka wawasan kita tentang fungsi alat-alat lab dan menginspirasi produk olahan apa saja yang bisa kita kembangkan ke depannya.
+                        </p>
+
+                        <!-- Poin Rencana Nyata -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-marine-900/5">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-ocean-100/40 flex items-center justify-center text-ocean-600 flex-shrink-0">
+                                    <i class="fa-solid fa-eye text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Pengenalan Alat</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Melihat langsung dan memahami fungsi dasar dari setiap alat pengolahan modern di lab.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-ocean-100/40 flex items-center justify-center text-ocean-600 flex-shrink-0">
+                                    <i class="fa-solid fa-lightbulb text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Sesi Sharing Bisnis</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Mengupas peluang bisnis perikanan kreatif yang selaras dengan materi kuliah TBPK.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-9 h-9 rounded-xl bg-ocean-100/40 flex items-center justify-center text-ocean-600 flex-shrink-0">
+                                    <i class="fa-solid fa-cubes text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-marine-900 uppercase tracking-wider mb-0.5">Eksplorasi Karya</h4>
+                                    <p class="text-[11px] text-marine-900/60 font-normal">Melihat contoh-contoh inovasi produk dan teknik pengemasan untuk bahan referensi usaha.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Sederhana & Ramah -->
+    <footer class="bg-white/50 border-t border-white/50 py-8 relative overflow-hidden backdrop-blur-md">
+        <div class="max-w-6xl mx-auto px-6 sm:px-8 relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 bg-gradient-to-tr from-ocean-500 to-marine-500 rounded-xl flex items-center justify-center text-white text-sm shadow-sm">
+                    <i class="fa-solid fa-anchor"></i>
+                </div>
+                <div>
+                    <span class="font-serif text-sm font-bold tracking-wide text-marine-900">
+                        EKOTIF <span class="text-ocean-600 font-sans font-bold text-[9px] tracking-widest block uppercase leading-none mt-0.5">HIMATEKBIS 2026</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="text-[11px] text-marine-900/50 text-center sm:text-right font-normal">
+                &copy; 2026 EKOTIF HIMATEKBIS TBPK Jepara. Dibuat bersama dengan semangat wirausaha bahari yang jujur dan bersahabat.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Kode Interaksi Halaman -->
+    <script>
+        // Membuat gelembung air bergerak alami di latar belakang
+        function initAmbientBubbles() {
+            const container = document.getElementById('bubbles-container');
+            if (!container) return;
+            
+            const bubbleCount = 18;
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble');
+                
+                // Variasi ukuran, posisi, delay, dan kecepatan gelembung agar organik
+                const size = Math.random() * 45 + 12;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.animation = `gentleFloat ${Math.random() * 15 + 12}s ease-in-out infinite`;
+                bubble.style.animationDelay = `${Math.random() * 8}s`;
+                
+                container.appendChild(bubble);
+            }
+        }
+
+        // Menghitung posisi gulir layar untuk memperpanjang garis alur proker
+        function updateTimelineProgress() {
+            const progressBar = document.getElementById('timeline-progress');
+            if (!progressBar) return;
+
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            
+            if (docHeight <= 0) return;
+            
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            // Dibuat lebih responsif agar garis terisi dengan pas saat di-scroll
+            const targetHeight = Math.min(Math.max(scrollPercent * 1.12, 0), 100);
+            progressBar.style.height = `${targetHeight}%`;
+        }
+
+        // Memicu klik pada input file tersembunyi saat logo diklik
+        function triggerLogoUpload() {
+            const fileInput = document.getElementById('logo-file-input');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        // Membawa Custom Toast melayang untuk menggantikan alert default
+        function showToast(message, type = "error") {
+            const toast = document.getElementById('toast-notification');
+            const toastMsg = document.getElementById('toast-message');
+            if (!toast || !toastMsg) return;
+
+            toastMsg.innerText = message;
+            
+            // Tampilkan Toast
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            // Sembunyikan setelah 4 detik
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+        }
+
+        // Memproses berkas gambar yang dipilih oleh user dan memperbarui logo
+        function processImageFile(file) {
+            if (!file) return;
+
+            // Pastikan berkas benar-benar berupa gambar
+            if (!file.type.startsWith('image/')) {
+                showToast("Format berkas salah. Silakan unggah file gambar (PNG, JPG, SVG, dll).");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const customImg = document.getElementById('custom-logo-img');
+                const defaultIcon = document.getElementById('default-logo-icon');
+                
+                if (customImg && defaultIcon) {
+                    customImg.src = e.target.result;
+                    customImg.classList.remove('hidden');
+                    defaultIcon.classList.add('hidden');
+                    showToast("Logo berhasil diperbarui!", "success");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Event handler saat input file tradisional berubah
+        function handleLogoChange(event) {
+            const file = event.target.files[0];
+            processImageFile(file);
+        }
+
+        // Menambahkan Integrasi Drag & Drop pada zona logo
+        function initDragAndDrop() {
+            const dropZone = document.getElementById('logo-drop-zone');
+            if (!dropZone) return;
+
+            // Efek visual saat dragover
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.querySelector('#logo-preview-container').classList.add('scale-110', 'ring-4', 'ring-ocean-500');
+                }, false);
+            });
+
+            // Efek visual saat dragleave
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.querySelector('#logo-preview-container').classList.remove('scale-110', 'ring-4', 'ring-ocean-500');
+                }, false);
+            });
+
+            // Deteksi berkas dijatuhkan (Dropped)
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                processImageFile(file);
+            });
+        }
+
+        // Menjalankan inisialisasi awal saat halaman selesai dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            initAmbientBubbles();
+            updateTimelineProgress();
+            initDragAndDrop();
+        });
+
+        window.addEventListener('scroll', updateTimelineProgress);
+        window.addEventListener('resize', updateTimelineProgress);
+    </script>
+</body>
+</html>
